@@ -72,6 +72,40 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
         initGoogleSignClient();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        /*自动登录*/
+        OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
+        if (opr.isDone()) {
+            // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
+            // and the GoogleSignInResult will be available instantly.
+            Log.d("xxx", "Got cached sign-in");
+            GoogleSignInResult result = opr.get();
+            if (handleSignInResult(result)) {
+
+            }
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInResult(result);
+        }
+        if(requestCode == REQUEST_AUTHORIZATION) {
+            performUploadClick();
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.e("xxx","连接服务器失败");
+    }
+
     private void initGoogleSignClient() {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -91,35 +125,6 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
         youtubeUpload.setOnClickListener(this);
         youtubeLoginOut.setOnClickListener(this);
         youtubeDisconnect.setOnClickListener(this);
-    }
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        /*自动登录*/
-        OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
-        if (opr.isDone()) {
-            // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
-            // and the GoogleSignInResult will be available instantly.
-            Log.d("xxx", "Got cached sign-in");
-            GoogleSignInResult result = opr.get();
-            if (handleSignInResult(result)) {
-
-            }
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
-        }
-        if(requestCode == REQUEST_AUTHORIZATION) {
-            performUploadClick();
-        }
     }
 
     private boolean handleSignInResult(GoogleSignInResult result) {
@@ -190,11 +195,6 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
     private void performLoginClick() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e("xxx","连接服务器失败");
     }
 
     class MyUploadThread extends Thread {
