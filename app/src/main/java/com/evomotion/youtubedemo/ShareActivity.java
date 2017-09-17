@@ -48,6 +48,7 @@ import java.util.List;
  */
 
 public class ShareActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
+    private static final String TAG = "ShareActivity";
     private Button youtubeLogin;
     private Button youtubeUpload;
     private GoogleApiClient mGoogleApiClient;
@@ -83,7 +84,7 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
             Log.d("xxx", "Got cached sign-in");
             GoogleSignInResult result = opr.get();
             if (handleSignInResult(result)) {
-
+                Log.d("xxx", "onstart, result = "+result);
             }
         }
     }
@@ -91,10 +92,17 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult result = "+ requestCode);
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInResult(result);
+            Log.d(TAG,"displayName = "+result.getSignInAccount().getDisplayName() );
+            Log.d(TAG,"email = "+result.getSignInAccount().getEmail() );
+            Log.d(TAG,"givenName = "+result.getSignInAccount().getGivenName() );
+            Log.d(TAG,"idToken = "+result.getSignInAccount().getIdToken() );
+            Log.d(TAG,"photoUrl = "+result.getSignInAccount().getPhotoUrl().toString() );
+            Log.d(TAG,"status = "+result.getStatus().getStatus().toString() );
         }
         if(requestCode == REQUEST_AUTHORIZATION) {
             performUploadClick();
@@ -210,34 +218,19 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
 
     private void uploadVideo() {
         try {
-            // This object is used to make YouTube Data API requests.
-            Log.e("xxx","upload"+",account:"+credential.getSelectedAccountName());
-            // Add extra information to the video before uploading.
             Video videoObjectDefiningMetadata = new Video();
-
-            // Set the video to be publicly visible. This is the default
-            // setting. Other supporting settings are "unlisted" and "private."
             VideoStatus status = new VideoStatus();
             status.setPrivacyStatus("public");
             videoObjectDefiningMetadata.setStatus(status);
-
-            // Most of the video's metadata is set on the VideoSnippet object.
             VideoSnippet snippet = new VideoSnippet();
-
-            // This code uses a Calendar instance to create a unique name and
-            // description for test purposes so that you can easily upload
-            // multiple files. You should remove this code from your project
-            // and use your own standard names instead.
             Calendar cal = Calendar.getInstance();
-            snippet.setTitle("从ShareActivity分享过来的，你懂得 " + cal.getTime());
+            snippet.setTitle("2从ShareActivity分享过来的，你懂得 " + cal.getTime());
             snippet.setDescription(
                     "从ShareActivity分享过来的，你懂得" + "on " + cal.getTime());
 
-            // Set the keyword tags that you want to associate with the video.
             List<String> tags = new ArrayList<String>();
             tags.add("java");
             snippet.setTags(tags);
-            // Add the completed snippet object to the video resource.
             videoObjectDefiningMetadata.setSnippet(snippet);
             InputStream open = getAssets().open(SAMPLE_VIDEO_FILENAME);
             int available = open.available();
@@ -245,25 +238,11 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
             InputStreamContent mediaContent = new InputStreamContent(VIDEO_FILE_FORMAT, new BufferedInputStream(open));
             mediaContent.setLength(available);
             Log.e("xxx","available:"+mediaContent.getLength());
-            // Insert the video. The command sends three arguments. The first
-            // specifies which information the API request is setting and which
-            // information the API response should return. The second argument
-            // is the video resource that contains metadata about the new video.
-            // The third argument is the actual video content.
             YouTube.Videos.Insert videoInsert = youtube.videos()
                     .insert("snippet,statistics,status", videoObjectDefiningMetadata, mediaContent);
 
-            // Set the upload type and add an event listener.
             MediaHttpUploader uploader = videoInsert.getMediaHttpUploader();
 
-            // Indicate whether direct media upload is enabled. A value of
-            // "True" indicates that direct media upload is enabled and that
-            // the entire media content will be uploaded in a single request.
-            // A value of "False," which is the default, indicates that the
-            // request will use the resumable media upload protocol, which
-            // supports the ability to resume an upload operation after a
-            // network interruption or other transmission failure, saving
-            // time and bandwidth in the event of network failures.
             uploader.setDirectUploadEnabled(false);
             uploader.setChunkSize(MediaHttpUploader.MINIMUM_CHUNK_SIZE);
             MediaHttpUploaderProgressListener progressListener = new MediaHttpUploaderProgressListener() {
@@ -291,7 +270,6 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
             };
             uploader.setProgressListener(progressListener);
 
-            // Call the API and upload the video.
             Video returnedVideo = videoInsert.execute();
 
             // Print data about the newly inserted video from the API response.
