@@ -76,7 +76,11 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
     @Override
     protected void onStart() {
         super.onStart();
-        /*自动登录*/
+        silentSignIn();
+    }
+
+    private void silentSignIn() {
+    /*自动登录*/
         OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
         if (opr.isDone()) {
             // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
@@ -111,7 +115,7 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e("xxx","连接服务器失败");
+        Log.e(TAG,"连接服务器失败");
     }
 
     private void initGoogleSignClient() {
@@ -136,7 +140,7 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private boolean handleSignInResult(GoogleSignInResult result) {
-        Log.e("xxx", "handleSignInResult:" + result.isSuccess());
+        Log.e(TAG, "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
             //Status{statusCode=unknown status code: 12501, resolution=null}
             // Signed in successfully, show authenticated UI.
@@ -146,7 +150,7 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
             credential.setSelectedAccount(acct.getAccount());
             youtube = new YouTube
                     .Builder(transport, jsonFactory, credential)
-                    .setApplicationName("MyNewShare")
+                    .setApplicationName("YoutubeDemo")
                     .build();
             return true;
         }
@@ -201,7 +205,9 @@ public class ShareActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void performLoginClick() {
+        Log.d(TAG, "performLoginClick");
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        Log.d(TAG, "signInIntent = " + signInIntent);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
